@@ -85,7 +85,7 @@ class Client(BaseClient):
     def logout(self):
         res = BaseClient.logout(self)
         return res._name == _tPartnerNS.logoutResponse
-        
+
     def isConnected(self):
         """ First pass at a method to check if we're connected or not """
         if self.__conn and self.__conn._HTTPConnection__state == 'Idle':
@@ -206,7 +206,11 @@ class Client(BaseClient):
 
     def convert_leads(self, lead_converts):
         preparedLeadConverts = _prepareSObjects(lead_converts)
-        del preparedLeadConverts['fieldsToNull']
+        if isinstance( preparedLeadConverts, dict ):
+            del preparedLeadConverts['fieldsToNull']
+        else:
+            for preppedConvert in preparedLeadConverts:
+                del preppedConvert['fieldsToNull']
         res = BaseClient.convertLeads(self, preparedLeadConverts)
         if type(res) not in (TupleType, ListType):
             res = [res]
@@ -229,11 +233,11 @@ class Client(BaseClient):
     def sendEmail(self, emails, mass_type='SingleEmailMessage'):
         """
         Send one or more emails from Salesforce.
-        
+
         Parameters:
             emails - a dictionary or list of dictionaries, each representing a single email as described by https://www.salesforce.com/us/developer/docs/api/Content/sforce_api_calls_sendemail.htm
             massType - 'SingleEmailMessage' or 'MassEmailMessage'. MassEmailMessage is used for mailmerge of up to 250 recepients in a single pass.
-        
+
         Note:
             Newly created Salesforce Sandboxes default to System email only. In this situation, sendEmail() will fail with NO_MASS_MAIL_PERMISSION.
         """
@@ -317,7 +321,7 @@ class Client(BaseClient):
             type_data = typeDescs[row_type]
             _logger.debug("type data: {0}".format(type_data))
             for field in r:
-               fname = str(field._name[1]) 
+               fname = str(field._name[1])
                if isObject(field):
                    record[fname] = self._extractRecord(r[field._name:][0], typeDescs)
                elif isQueryResult(field):
@@ -652,7 +656,7 @@ def isnil(xml):
         return False
 
 def getRecordTypes(xml):
-    record_types = set() 
+    record_types = set()
     if xml:
         record_types.add(str(xml[_tSObjectNS.type]))
         for field in xml:
